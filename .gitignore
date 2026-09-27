@@ -1,0 +1,10 @@
+WikiSQL/
+starter/WikiSQL
+starter/*_pairs.jsonl
+starter/spm_corpus.txt
+checkpoints/
+*.pt
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
+venv/
