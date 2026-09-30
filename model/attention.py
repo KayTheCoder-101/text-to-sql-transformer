@@ -16,23 +16,30 @@ class ScaledDotProductAttention(nn.Module):
         output=torch.matmul(weights,V)
         return output,weights
 
-if __name__ == "__main__":
-    torch.manual_seed(0)
-    attn = ScaledDotProductAttention()
+class MultiHeadAttention(nn.Module):
+    def __init__(self,d_model=256,num_heads=4): 
+        super().__init__() 
+        assert d_model%num_heads==0
+        self.num_heads=num_heads
+        self.d_k=d_model//num_heads
+        self.w_q=nn.Linear(d_model,d_model)
+        self.w_k=nn.Linear(d_model,d_model)
+        self.w_v=nn.Linear(d_model,d_model)
+        self.w_o=nn.Linear(d_model,d_model)
+        self.attention=ScaledDotProductAttention()
 
-    Q = torch.randn(2, 4, 3, 64)
-    K = torch.randn(2, 4, 5, 64)
-    V = torch.randn(2, 4, 5, 64)
 
-    # Test 1: no mask
-    out, w = attn(Q, K, V)
-    print("output shape :", out.shape)      # expect (2, 4, 3, 64)
-    print("weights shape:", w.shape)        # expect (2, 4, 3, 5)
-    print("row sums     :", w.sum(-1)[0, 0])  # expect all 1.0
+    def forward(self,querey,key,value,mask=None):  
+         B_size=querey.size(0)
+         q=self.w_q(querey)
+         k=self.w_k(key)
+         v=self.w_v(value)
+         q=q.view(q.size(0),-1,self.num_heads,self.d_k).transpose(1,2)
+         k=k.view(k.size(0),-1,self.num_heads,self.d_k).transpose(1,2)
+         v=v.view(v.size(0),-1,self.num_heads,self.d_k).transpose(1,2)
+         out,weights=self.attention(q,k,v,mask)
+         out=out.transpose(1,2).contiguous().view(out.size(0),-1,self.num_heads*self.d_k)
+         out=self.w_o(out)
+         return out,weights
 
-    # Test 2: hide the last 2 keys (True = keep, False = hide)
-    mask = torch.ones(2, 1, 1, 5, dtype=torch.bool)
-    mask[..., 3:] = False
-    out, w = attn(Q, K, V, mask)
-    print("masked weights:\n", w[0, 0])     # last 2 columns must be 0
-    print("row sums     :", w.sum(-1)[0, 0])  # still all 1.0
+
