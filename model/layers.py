@@ -58,21 +58,22 @@ class DecoderLayer(nn.Module):
         output,_=self.self_attn(x,x,x,tgt_mask)
         x=self.norm1(x+self.dropout1(output))
         # 2. cross-attention: queries from decoder, keys/values from encoder output
-        output,_=self.cross_attn(x,enc_out,enc_out,src_mask)
+        output,cross_weights=self.cross_attn(x,enc_out,enc_out,src_mask)   # keep weights (Task 5.3)
         x=self.norm2(x+self.dropout2(output))
         # 3. feed-forward
         f=self.ffn(x)
         x=self.norm3(x+self.dropout3(f))
-        return x
+        return x,cross_weights
 
 class Decoder(nn.Module):
      def __init__ (self,num_layers,d_model=256,num_heads=4,d_ff=1024,dropout=0.1):
         super().__init__()
         self.layers=nn.ModuleList([DecoderLayer(d_model,num_heads,d_ff,dropout)for _ in range(num_layers)])
      def forward(self,x,enc_out,src_mask,tgt_mask):
+        cross_weights=None
         for layer in self.layers:
-               x=layer(x,enc_out,src_mask,tgt_mask)
-        return x
+               x,cross_weights=layer(x,enc_out,src_mask,tgt_mask)
+        return x,cross_weights        # weights of the LAST layer
 
 if __name__ == "__main__":
     torch.manual_seed(0)
@@ -112,18 +113,28 @@ if __name__ == "__main__":
     src_mask = torch.ones(2, 1, 1, S, dtype=torch.bool)
     causal = torch.tril(torch.ones(T, T, dtype=torch.bool)).unsqueeze(0).unsqueeze(0)  # (1,1,T,T)
     dlayer = DecoderLayer(256, 4, 1024, 0.1)
-    print("DecoderLayer out:", dlayer(y, enc_out, src_mask, causal).shape)   # (2,4,256)
+    out, w = dlayer(y, enc_out, src_mask, causal)
+    print("DecoderLayer out:", out.shape, " cross weights:", w.shape)      # (2,4,256) (2,4,4,5)
     print("DecoderLayer params:", sum(p.numel() for p in dlayer.parameters()))  # 1053440
 
     # --- Decoder stack ---
     dec = Decoder(3, 256, 4, 1024, 0.1)
-    print("Decoder out:", dec(y, enc_out, src_mask, causal).shape)          # (2,4,256)
+    out, w = dec(y, enc_out, src_mask, causal)
+    print("Decoder out:", out.shape, " cross weights:", w.shape)           # (2,4,256) (2,4,4,5)
     print("Decoder params:", sum(p.numel() for p in dec.parameters()))      # 3160320
 
     # --- Causality: changing a future token must not affect earlier positions ---
     dec.eval()
     y2 = y.clone()
     y2[:, -1] = torch.randn(2, 256)            # change only the last position
-    o1 = dec(y, enc_out, src_mask, causal)
-    o2 = dec(y2, enc_out, src_mask, causal)
+    o1, _ = dec(y, enc_out, src_mask, causal)
+    o2, _ = dec(y2, enc_out, src_mask, causal)
     print("causal:", torch.allclose(o1[:, :-1], o2[:, :-1], atol=1e-5))     # True
+
+    # --- Source padding: extra masked encoder positions must not change the output ---
+    enc_out2 = torch.cat([enc_out, torch.randn(2, 3, 256)], dim=1)   # 3 junk source positions
+    src_mask2 = torch.ones(2, 1, 1, S + 3, dtype=torch.bool)
+    src_mask2[..., S:] = False
+    o3, w3 = dec(y, enc_out2, src_mask2, causal)
+    print("source padding invariant:", torch.allclose(o1, o3, atol=1e-5))   # True
+    print("weight on source padding:", w3[..., S:].abs().max().item())       # 0.0
