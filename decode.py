@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+from difflib import SequenceMatcher
 
 # Resolve the starter directory relative to this file, not the working directory.
 sys.path.insert(
@@ -9,6 +10,9 @@ sys.path.insert(
 from data_prep import AGG_OPS, COND_OPS  # single source of truth for indices
 
 COL_RE = re.compile(r"^<c(\d+)>$")
+
+THRESHOLD = 0.6      # minimum similarity for snap_value to replace a value
+UNK = "⁇"            # what sentencepiece decode shows for unknown characters
 
 
 def _col_num(token):
@@ -105,6 +109,48 @@ def to_readable_sql(query, header):
     return sql
 
 
+def snap_value(value, question):
+    q = question.lower()
+
+    # Fast path: value is already in the question exactly
+    if UNK not in value and value in q:
+        return value
+
+    key = " ".join(value.replace(UNK, "").split())
+
+    # Words of q with their start/end character positions
+    words = [(m.start(), m.end()) for m in re.finditer(r"\S+", q)]
+    max_words = len(value.split()) + 2
+
+    best, best_score = value, 0.0
+    for i in range(len(words)):
+        start = words[i][0]
+        for j in range(i, min(len(words), i + max_words)):
+            span = q[start:words[j][1]]
+            if span.endswith("?"):
+                span = span[:-1]
+            if not span:
+                continue
+            score = SequenceMatcher(None, key, span).ratio()
+            if score > best_score:
+                best, best_score = span, score
+
+    if best_score >= THRESHOLD:
+        return best
+    return value  # nothing close: keep the model's value
+
+
+def snap_query(query, question):
+    if query is None:
+        return None
+    # Build a new dict and new cond lists so the unsnapped query stays intact.
+    new_conds = [
+        [col, op, snap_value(value, question)]
+        for col, op, value in query["conds"]
+    ]
+    return {"sel": query["sel"], "agg": query["agg"], "conds": new_conds}
+
+
 if __name__ == "__main__":
     tests = [
         "select <c2> where <c0> = terrence ross",
@@ -123,3 +169,8 @@ if __name__ == "__main__":
     print(to_readable_sql(parse_sql("select <c9>"), header))                 # None
     print(to_readable_sql(parse_sql("select <c2> where <c0> = o'brien"), header))  # 'o''brien'
     print(to_readable_sql(None, header))                                     # None
+
+    # Value snapping
+    print(snap_value("宁 ⁇ 县", "Which county is 宁陵县?"))                  # 宁陵县
+    print(snap_value("terence ross", "What is Terrence Ross' nationality"))  # terrence ross
+    print(snap_value("terrence ross", "What is Terrence Ross' nationality")) # unchanged (fast path)
