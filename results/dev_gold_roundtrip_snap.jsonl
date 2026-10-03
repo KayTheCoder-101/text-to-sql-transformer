@@ -964,7 +964,7 @@
 {"query": {"sel": 4, "agg": 0, "conds": [[3, 0, "tuesday 22:00~22:54 8 april 2008 to 17 june 2008"]]}}
 {"query": {"sel": 0, "agg": 0, "conds": [[2, 0, "tv asahi"]]}}
 {"query": {"sel": 1, "agg": 3, "conds": [[7, 0, "8.9%"]]}}
-{"query": {"sel": 1, "agg": 0, "conds": [[5, 0, "\"ya-kyim \"super\u2606looper\""]]}}
+{"query": {"sel": 1, "agg": 0, "conds": [[5, 0, "ya-kyim \"super\u2606looper\""]]}}
 {"query": {"sel": 7, "agg": 0, "conds": [[2, 0, "tv asahi"]]}}
 {"query": {"sel": 6, "agg": 0, "conds": [[2, 0, "4-speed automatic"], [1, 0, "2002-2005"]]}}
 {"query": {"sel": 6, "agg": 0, "conds": [[1, 0, "2006-2009"], [2, 0, "5-speed manual"]]}}
@@ -3486,8 +3486,8 @@
 {"query": {"sel": 5, "agg": 2, "conds": [[1, 2, "2"], [2, 0, "7"], [3, 2, "0"]]}}
 {"query": {"sel": 1, "agg": 4, "conds": [[0, 0, "rolla bigelow"], [2, 2, "0"]]}}
 {"query": {"sel": 0, "agg": 0, "conds": [[6, 0, "jun 6"]]}}
-{"query": {"sel": 6, "agg": 0, "conds": [[4, 0, "(\u6e05\u660e) cheongmyeong"]]}}
-{"query": {"sel": 5, "agg": 0, "conds": [[2, 0, "(\u8292\u79cd) m\u00e1ngzh\u00f2ng"]]}}
+{"query": {"sel": 6, "agg": 0, "conds": [[4, 0, "\uccad\uba85 (\u6e05\u660e) cheongmyeong"]]}}
+{"query": {"sel": 5, "agg": 0, "conds": [[2, 0, "\u8292\u7a2e (\u8292\u79cd) m\u00e1ngzh\u00f2ng"]]}}
 {"query": {"sel": 1, "agg": 0, "conds": [[6, 0, "jun 21"]]}}
 {"query": {"sel": 3, "agg": 0, "conds": [[4, 0, "\uacbd\uce69 (\u9a5a\u87c4) gyeongchip"]]}}
 {"query": {"sel": 1, "agg": 0, "conds": [[6, 0, "sep 23"]]}}
@@ -3507,10 +3507,10 @@
 {"query": {"sel": 2, "agg": 0, "conds": [[6, 0, "784"]]}}
 {"query": {"sel": 1, "agg": 0, "conds": [[2, 0, "5c"]]}}
 {"query": {"sel": 3, "agg": 0, "conds": [[1, 0, "\u091f\u0947 te"]]}}
-{"query": {"sel": 4, "agg": 0, "conds": [[2, 0, "tha"]]}}
+{"query": {"sel": 4, "agg": 0, "conds": [[2, 0, "\u0925 tha"]]}}
 {"query": {"sel": 3, "agg": 0, "conds": [[2, 0, "\u091a\u0947 che"]]}}
-{"query": {"sel": 0, "agg": 0, "conds": [[3, 0, "ng/na"]]}}
-{"query": {"sel": 4, "agg": 0, "conds": [[1, 0, "ju/khi"]]}}
+{"query": {"sel": 0, "agg": 0, "conds": [[3, 0, "\u0919 ng/na"]]}}
+{"query": {"sel": 4, "agg": 0, "conds": [[1, 0, "\u0916\u0940 ju/khi"]]}}
 {"query": {"sel": 1, "agg": 0, "conds": [[2, 0, "\u0938\u093e sa"]]}}
 {"query": {"sel": 3, "agg": 0, "conds": [[0, 0, "18b"]]}}
 {"query": {"sel": 3, "agg": 0, "conds": [[0, 0, "16"]]}}
@@ -3851,8 +3851,8 @@
 {"query": {"sel": 3, "agg": 0, "conds": [[1, 0, "15:00"]]}}
 {"query": {"sel": 5, "agg": 0, "conds": [[3, 0, "toronto rebels"]]}}
 {"query": {"sel": 5, "agg": 0, "conds": [[2, 0, "\uacbd\uc0c1\ub0a8\ub3c4"]]}}
-{"query": {"sel": 7, "agg": 0, "conds": [[3, 0, "\u2047 \u5b89 \u2047 \u9053"]]}}
-{"query": {"sel": 0, "agg": 0, "conds": [[2, 0, "\u2047 \ub3c4"], [5, 0, "wonsan"]]}}
+{"query": {"sel": 7, "agg": 0, "conds": [[3, 0, "\u5e73\u5b89\u5317\u9053"]]}}
+{"query": {"sel": 0, "agg": 0, "conds": [[2, 0, "\uac15\uc6d0\ub3c4"], [5, 0, "wonsan"]]}}
 {"query": {"sel": 4, "agg": 0, "conds": [[2, 0, "\uacbd\uae30\ub3c4"]]}}
 {"query": {"sel": 1, "agg": 0, "conds": [[5, 0, "cheongju"]]}}
 {"query": {"sel": 3, "agg": 1, "conds": [[4, 0, "32"], [2, 0, "montepaschi siena"], [0, 1, "4"]]}}
@@ -4941,9 +4941,9 @@
 {"query": {"sel": 4, "agg": 0, "conds": [[3, 0, "73-70-71-72=286"]]}}
 {"query": {"sel": 4, "agg": 0, "conds": [[0, 0, "4"]]}}
 {"query": {"sel": 5, "agg": 4, "conds": [[0, 0, "5"]]}}
-{"query": {"sel": 3, "agg": 0, "conds": [[0, 0, "\" \u2047 \u0e29\""]]}}
+{"query": {"sel": 3, "agg": 0, "conds": [[0, 0, "\"\u0e02\u0e2d\u0e42\u0e17\u0e29\""]]}}
 {"query": {"sel": 3, "agg": 0, "conds": [[1, 0, "sirapatara kalayapanid"]]}}
-{"query": {"sel": 2, "agg": 0, "conds": [[0, 0, "\" \u2047 \u0e29\""]]}}
+{"query": {"sel": 2, "agg": 0, "conds": [[0, 0, "\"\u0e02\u0e2d\u0e42\u0e17\u0e29\""]]}}
 {"query": {"sel": 4, "agg": 2, "conds": [[3, 0, "65.4%"]]}}
 {"query": {"sel": 2, "agg": 2, "conds": [[6, 0, "106"], [4, 2, "3,188"]]}}
 {"query": {"sel": 4, "agg": 1, "conds": [[5, 0, "1.7%"], [6, 2, "75"], [2, 1, "1,524"]]}}
@@ -8052,8 +8052,8 @@
 {"query": {"sel": 4, "agg": 4, "conds": [[0, 0, "f10"]]}}
 {"query": {"sel": 5, "agg": 0, "conds": [[0, 0, "f7"]]}}
 {"query": {"sel": 2, "agg": 0, "conds": [[0, 0, "f9"]]}}
-{"query": {"sel": 3, "agg": 0, "conds": [[5, 0, "eliminated"], [1, 0, "\u6797\u4f69\u742a lin peiqi's"]]}}
-{"query": {"sel": 4, "agg": 3, "conds": [[5, 0, "eliminated"], [1, 0, "\u5ed6\u5c39\u5b81 jvnne leow's"]]}}
+{"query": {"sel": 3, "agg": 0, "conds": [[5, 0, "eliminated"], [1, 0, "\u6797\u4f69\u742a lin peiqi"]]}}
+{"query": {"sel": 4, "agg": 3, "conds": [[5, 0, "eliminated"], [1, 0, "\u5ed6\u5c39\u5b81 jvnne leow"]]}}
 {"query": {"sel": 2, "agg": 0, "conds": [[0, 0, "qf(r)"]]}}
 {"query": {"sel": 1, "agg": 0, "conds": [[3, 0, "firhill"], [2, 0, "ayr united"]]}}
 {"query": {"sel": 4, "agg": 5, "conds": [[3, 0, "firhill"], [0, 0, "5(r)"]]}}
@@ -8398,7 +8398,7 @@
 {"query": {"sel": 6, "agg": 0, "conds": [[8, 0, "correct as of 2 june 2009"]]}}
 {"query": {"sel": 6, "agg": 0, "conds": [[0, 0, "croesyceiliog rfc"]]}}
 {"query": {"sel": 6, "agg": 0, "conds": [[3, 0, "d 32 \u221a"]]}}
-{"query": {"sel": 3, "agg": 0, "conds": [[4, 0, "majority"]]}}
+{"query": {"sel": 3, "agg": 0, "conds": [[4, 0, "\u2190 majority"]]}}
 {"query": {"sel": 5, "agg": 0, "conds": [[6, 0, "d 42 \u221a"]]}}
 {"query": {"sel": 1, "agg": 0, "conds": [[4, 0, "r 24"]]}}
 {"query": {"sel": 2, "agg": 0, "conds": [[6, 0, "r 2"]]}}
