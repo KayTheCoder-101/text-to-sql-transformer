@@ -206,3 +206,9 @@ if __name__ == "__main__":
     gold_roundtrip(snap_file, snap=True)
     print("components:", component_accuracy(snap_file, "dev"))
     print("official:", run_official_evaluator("dev", snap_file))
+    sp = spm.SentencePieceProcessor()
+    sp.load(os.path.join(STARTER_DIR, "sql_sp.model"))
+    from model.transformer import Transformer
+    model = Transformer(sp.get_piece_size(), pad_id=PAD_ID).to(DEVICE).eval()
+    write_predictions(model, sp, "dev", "results/dev_untrained.jsonl", limit=20)
+    write_predictions(model, sp, "dev", "results/dev_untrained_beam.jsonl", method="beam", limit=5)
