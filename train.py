@@ -17,7 +17,7 @@ from dataset import make_loader
 from tokenizer import PAD_ID
 
 # ---------------- Settings ----------------
-EPOCHS = 1
+EPOCHS = 20
 BATCH_SIZE = 64
 D_MODEL = 256
 WARMUP = 4000
@@ -25,8 +25,8 @@ LABEL_SMOOTHING = 0.1
 SEED = 0
 CKPT_DIR = "checkpoints"
 USE_STANDIN = False   # set to False to train the real Transformer
-MAX_BATCHES = 20       # set to None for real training (None = every batch)
-OVERFIT = True       # NEW: True = memorize one batch (bug check), then exit
+MAX_BATCHES = None       # set to None for real training (None = every batch)
+OVERFIT = False   # NEW: True = memorize one batch (bug check), then exit
 OVERFIT_STEPS = 300    # NEW
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
