@@ -2,7 +2,7 @@
 
 Turn an English question about a table into the SQL query that answers it, using the encoder–decoder Transformer from *Attention Is All You Need* (Vaswani et al., 2017), implemented from basic PyTorch layers and trained from random initialisation on WikiSQL.
 
-**Live demo:** TBD  |  **Medium blog:** TBD  |  **LinkedIn post:** TBD
+**Live demo:** [text-to-sql-kulsoom-mobeen.streamlit.app](https://text-to-sql-kulsoom-mobeen.streamlit.app)  |  **Medium blog:** [ADD MEDIUM LINK]  |  **LinkedIn post:** [ADD LINKEDIN LINK]
 **Team:** Kulsoom · Mobeen
 
 | Input | Output |
@@ -203,6 +203,8 @@ cd starter && ln -s ../WikiSQL WikiSQL && python data_prep.py && cd ..
 
 Do **not** run `tokenizer.py` again. The trained model only works with the committed `starter/sql_sp.model`.
 
+`requirements.txt` installs the CPU build of PyTorch, which is enough for evaluation and the app. For training, use a GPU machine such as Colab, where a CUDA build of PyTorch is already installed.
+
 ---
 
 ## Reproduce everything
@@ -386,7 +388,20 @@ Then open http://localhost:8501.
 
 The app loads `checkpoints/final.pt` if it exists, otherwise `checkpoints/best.pt`, and caches the model so it loads only once.
 
-**Live demo:** TBD
+**Live demo:** [text-to-sql-kulsoom-mobeen.streamlit.app](https://text-to-sql-kulsoom-mobeen.streamlit.app)
+
+### Deployment
+
+The app runs on Streamlit Community Cloud, deployed straight from this repository:
+
+| Setting | Value |
+|---|---|
+| Main file | `app/app.py` |
+| Python | 3.11 |
+| Model | `checkpoints/final.pt` (the only checkpoint committed, ~30 MB) |
+| PyTorch | CPU-only build, via the extra index in `requirements.txt` |
+
+Free Streamlit apps go to sleep when nobody has used them for a while. If the page says the app is asleep, click the button to wake it up and wait about a minute.
 
 ---
 
@@ -394,8 +409,8 @@ The app loads `checkpoints/final.pt` if it exists, otherwise `checkpoints/best.p
 
 | Member | Main contributions |
 |---|---|
-| Kulsoom | TBD |
-| Mobeen | TBD |
+| Kulsoom | Attention, masks, feed-forward and encoder; full model and weight tying; training loop and LR schedule; decoding, parser and value snapping; evaluation pipeline; Streamlit app and deployment; README |
+| Mobeen | Decoder layer and stack; training run on Colab; decoding and checkpoint-averaging experiments; final averaged model; test run; poster and NotebookLM video |
 
 ---
 
