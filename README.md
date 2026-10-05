@@ -14,9 +14,9 @@ Turn an English question about a table into the SQL query that answers it, using
 | Split | Logical form | Execution | Parse failures |
 |---|---|---|---|
 | Dev | **48.39%** | **55.97%** | 1.01% |
-| Test | TBD | TBD | TBD |
+| Test | **47.81%** | **54.81%** | 0.72% |
 
-Final setup: average of the epoch 16–20 checkpoints, beam search (size 4, length penalty α = 0.6), and value snapping. The original LSTM sequence-to-sequence baseline from the WikiSQL paper reaches about 36% execution accuracy; our model, trained from scratch with no pretrained weights, is about 20 points above it on dev.
+Final setup: average of the epoch 16–20 checkpoints, beam search (size 4, length penalty α = 0.6), and value snapping. The original LSTM sequence-to-sequence baseline from the WikiSQL paper reaches about 36% execution accuracy; our model, trained from scratch with no pretrained weights, reaches **54.8% on test**, about 19 points above it.
 
 ---
 
@@ -274,9 +274,11 @@ Dev loss fell steadily and levelled off from about epoch 14 without rising again
 |---|---|---|---|---|
 | Dev | greedy | 47.99 | 55.62 | 1.16 |
 | Dev | beam (4), α = 0.6 | **48.39** | **55.97** | 1.01 |
-| Test | beam (4), α = 0.6 | TBD | TBD | TBD |
+| Test | beam (4), α = 0.6 | 47.81 | 54.81 | 0.72 |
 
-All numbers come from the official WikiSQL `evaluate.py`, with value snapping on.
+All numbers come from the official WikiSQL `evaluate.py`, with value snapping on. The test set was run once, with the setup chosen on dev; test scores are slightly below dev (−0.6 logical form, −1.2 execution), as expected for unseen tables.
+
+Test component accuracy: `sel` 72.81%, `agg` 89.35%, WHERE 61.39%.
 
 ### Decoding and checkpoint experiments (dev)
 
