@@ -7,15 +7,16 @@ Turn an English question about a table into the SQL query that answers it, using
 
 | Input | Output |
 |---|---|
-| Question: *What is Terrence Ross' nationality?*<br>Columns: Player, No., Nationality, Position, Years in Toronto, School/Club Team | `SELECT Nationality FROM table WHERE Player = 'terrence ross'` |
+| Question: *What player played guard for toronto in 1996-97?*<br>Columns: Player, No., Nationality, Position, Years in Toronto, School/Club Team | `SELECT Player FROM table WHERE Position = 'guard' AND Years in Toronto = '1996-97'` |
 
-### Results at a glance (dev set)
+### Results at a glance
 
-| Decoding | Logical form | Execution | Parse failures |
+| Split | Logical form | Execution | Parse failures |
 |---|---|---|---|
-| Greedy | **45.79%** | **53.20%** | **0.90%** |
+| Dev | **48.39%** | **55.97%** | 1.01% |
+| Test | TBD | TBD | TBD |
 
-The original LSTM sequence-to-sequence baseline from the WikiSQL paper reaches about 36% execution accuracy. Our model, trained from scratch with no pretrained weights, lands about 17 points above it.
+Final setup: average of the epoch 16–20 checkpoints, beam search (size 4, length penalty α = 0.6), and value snapping. The original LSTM sequence-to-sequence baseline from the WikiSQL paper reaches about 36% execution accuracy; our model, trained from scratch with no pretrained weights, is about 20 points above it on dev.
 
 ---
 
@@ -59,12 +60,13 @@ flowchart LR
     A["WikiSQL<br/>questions + tables"] --> B["data_prep.py<br/>text-to-text pairs"]
     B --> C["tokenizer.py<br/>shared 8k BPE"]
     C --> D["train.py<br/>20 epochs, Noam schedule"]
-    D --> E["checkpoints<br/>best.pt, epoch_N.pt"]
-    E --> F["decode.py<br/>greedy / beam search"]
-    F --> G["parse + value snapping"]
-    G --> H["evaluate_model.py<br/>prediction files"]
-    H --> I["Official WikiSQL<br/>evaluator"]
-    G --> J["app/<br/>web front end"]
+    D --> E["checkpoints<br/>epoch_N.pt"]
+    E --> F["average epochs 16-20<br/>final.pt"]
+    F --> G["decode.py<br/>beam search, alpha 0.6"]
+    G --> H["parse + value snapping"]
+    H --> I["evaluate_model.py<br/>prediction files"]
+    I --> J["Official WikiSQL<br/>evaluator"]
+    H --> K["app/app.py<br/>Streamlit front end"]
 ```
 
 ---
@@ -129,7 +131,10 @@ Parameter breakdown: shared embedding 2,048,000 + encoder 3 × 789,760 + decoder
 | Optimiser | Adam, β1 = 0.9, β2 = 0.98, ε = 1e-9 |
 | Learning rate | d_model^-0.5 · min(step^-0.5, step · 4000^-1.5) |
 | Batch size / epochs | 64 / 20 |
-| Checkpoint selection | lowest dev loss (dev used only for this; test used once) |
+| Checkpoint selection | lowest dev loss (`best.pt`, epoch 19) |
+| Final weights | average of the epoch 16–20 checkpoints (`final.pt`), as the paper does for its base model |
+
+The dev set was used only to choose the checkpoint and the decoding settings; the test set was used once, at the end.
 
 ### Decoding
 
@@ -164,8 +169,9 @@ text-to-sql-transformer/
 ├── train.py              # Task 3: training loop, Noam schedule, checkpoints, resume
 ├── decode.py             # Task 4: greedy, beam search, parser, readable SQL, value snapping
 ├── evaluate_model.py     # Task 5: prediction files, official evaluator, components, attention map, samples
-├── app/                  # Task 6: web front end
-├── results/              # prediction files, figures, samples.md
+├── app/app.py            # Task 6: Streamlit front end
+├── checkpoints/          # model weights (not committed except final.pt)
+├── results/              # prediction files, figures, samples.md, train_log.json
 ├── requirements.txt
 └── README.md
 ```
@@ -185,7 +191,7 @@ pip install -r requirements.txt
 ```
 
 > **Intel Mac:** PyTorch stopped publishing Intel-Mac builds after 2.2. Use Python 3.11 and
-> `pip install torch==2.2.2 "numpy<2"`.
+> `pip install torch==2.2.2 "numpy<2"`, and keep `numpy<2` when installing anything else.
 
 Get WikiSQL and build the text pairs:
 
@@ -210,13 +216,20 @@ Run all commands from the repository root.
 | Module tests | `python -m model.attention` · `python -m model.layers` · `python -m model.transformer` |
 | Train (GPU recommended) | `python train.py` |
 | Gold round-trip check | `python evaluate_model.py roundtrip` |
-| Dev, greedy | `python evaluate_model.py predict` |
-| Dev, beam | `python evaluate_model.py predict --method beam --alpha 0.6` |
-| Checkpoint averaging | `python evaluate_model.py predict --ckpt checkpoints/epoch_16.pt ... checkpoints/epoch_20.pt` |
-| Test (run once) | `python evaluate_model.py predict --split test` + the final settings |
-| Samples | `python evaluate_model.py samples --pred results/dev_greedy.jsonl` |
+| Dev, greedy, best checkpoint | `python evaluate_model.py predict` |
+| Dev, beam, best checkpoint | `python evaluate_model.py predict --method beam --alpha 0.6` |
+| Build the final averaged model | see below |
+| Dev, final setup | `python evaluate_model.py predict --ckpt checkpoints/final.pt --method beam --alpha 0.6 --out results/dev_beam_a0.6_avg5.jsonl` |
+| Test (run once) | `python evaluate_model.py predict --split test --ckpt checkpoints/final.pt --method beam --alpha 0.6 --out results/test_beam_a0.6_avg5.jsonl` |
+| Samples | `python evaluate_model.py samples --pred results/dev_beam_a0.6_avg5.jsonl` |
 | Attention map | `python evaluate_model.py attention --index 1` |
-| Front end | TBD |
+| Front end | `python -m streamlit run app/app.py` |
+
+Build `final.pt`, the average of the last five epoch checkpoints:
+
+```bash
+python -c "import torch; from evaluate_model import load_model; m = load_model([f'checkpoints/epoch_{i}.pt' for i in range(16, 21)]); torch.save(m.state_dict(), 'checkpoints/final.pt')"
+```
 
 Training ran on a free Colab Tesla T4, with checkpoints saved to Google Drive so a disconnected session resumes from the last finished epoch.
 
@@ -253,25 +266,42 @@ encoder input (64, 122, 256) decoder input (64, 39, 256)
 | Best dev loss | 1.5500 |
 | Training time and GPU | 22.9 min, Tesla T4 (Colab) |
 
-### Table 3: Official metrics
+Dev loss fell steadily and levelled off from about epoch 14 without rising again, so there was no serious overfitting.
+
+### Table 3: Official metrics (final weights: average of epochs 16–20)
 
 | Split | Decoding | Logical form (%) | Execution (%) | Parse failures (%) |
 |---|---|---|---|---|
-| Dev | greedy | 45.79 | 53.20 | 0.90 |
-| Dev | beam (4) | TBD | TBD | TBD |
-| Test | TBD (final choice) | TBD | TBD | TBD |
+| Dev | greedy | 47.99 | 55.62 | 1.16 |
+| Dev | beam (4), α = 0.6 | **48.39** | **55.97** | 1.01 |
+| Test | beam (4), α = 0.6 | TBD | TBD | TBD |
 
-All numbers come from the official WikiSQL `evaluate.py`. Value snapping is on.
+All numbers come from the official WikiSQL `evaluate.py`, with value snapping on.
 
-### Table 4: Component accuracy (dev, greedy)
+### Decoding and checkpoint experiments (dev)
+
+| Weights | Decoding | Logical form (%) | Execution (%) | Parse failures (%) |
+|---|---|---|---|---|
+| best.pt (epoch 19) | greedy | 45.79 | 53.20 | 0.90 |
+| best.pt | beam, α = 0.0 | 46.02 | 53.32 | 1.25 |
+| best.pt | beam, α = 0.6 | 46.04 | 53.34 | 0.89 |
+| best.pt | beam, α = 1.0 | 46.04 | 53.30 | 0.91 |
+| average of epochs 16–20 | greedy | 47.99 | 55.62 | 1.16 |
+| **average of epochs 16–20** | **beam, α = 0.6** | **48.39** | **55.97** | **1.01** |
+
+- **Checkpoint averaging** gave the largest gain: about +2.2 logical form and +2.4 execution with the same decoding. Dev loss was flat over epochs 16–20, so the weights were moving within one good region; averaging them lands nearer its centre and generalises better.
+- **Beam search** adds a small, consistent +0.3 to +0.4 on top.
+- **The length penalty** matters mostly for validity: without it (α = 0) beam search prefers short, incomplete outputs and parse failures rise to 1.25%.
+
+### Table 4: Component accuracy (dev, final setup)
 
 | | |
 |---|---|
-| `sel` column correct (%) | 72.24 |
-| `agg` correct (%) | 88.40 |
-| WHERE clause correct (%) | 59.40 |
+| `sel` column correct (%) | 74.03 |
+| `agg` correct (%) | 88.37 |
+| WHERE clause correct (%) | 62.09 |
 
-The WHERE clause is the weakest component: every condition needs the right column, operator *and* value, with nothing missing or extra. Choosing the right column, in both SELECT and WHERE, accounts for most of the remaining errors.
+Aggregation is the easiest component: there are only six choices, and words like "how many" or "highest" signal them clearly. The WHERE clause is the hardest, since every condition needs the right column, operator *and* value, with nothing missing or extra. Choosing the right column, in both SELECT and WHERE, accounts for most of the remaining errors.
 
 ### Figures
 
@@ -281,15 +311,15 @@ The WHERE clause is the weakest component: every condition needs the right colum
 | **2. Training and dev loss** | ![Loss curve](results/loss_curve.png) |
 | **3. Learning-rate schedule** | ![LR schedule](results/lr_schedule.png) |
 | **4. Decoder cross-attention** (last layer, mean over heads) | ![Attention map](results/attention_map.png) |
-| **5. Front end** | TBD |
+| **5. Front end** | ![Front end](results/app_screenshot.png) |
 
 **Positional encoding.** Each row is the vector added to one position. Left-hand dimensions oscillate quickly and separate neighbouring positions; right-hand dimensions change slowly and separate distant ones. Together they give every position a unique pattern.
 
-**Attention map.** For *"How many schools did player number 3 play at?"* (dev #1, predicted correctly), the generated `<c5>` (School/Club Team) attends most to the question word "schools" (0.25) and to the source `<c5>` token (0.24). The generated `<c1>` (No.) attends most to "player" (0.24) and "number" (0.22). In the last layer, the model often locates a column through the question words that describe it, not only through the column token itself.
+**Attention map.** For *"How many schools did player number 3 play at?"* (dev #1, predicted correctly by the epoch-19 checkpoint), the generated `<c5>` (School/Club Team) attends most to the question word "schools" (0.25) and to the source `<c5>` token (0.24). The generated `<c1>` (No.) attends most to "player" (0.24) and "number" (0.22). In the last layer, the model often locates a column through the question words that describe it, not only through the column token itself.
 
 ### Qualitative samples
 
-Five correct and five wrong dev examples, each with a failure label, are in [`results/samples.md`](results/samples.md). The wrong ones cover five different failure types: wrong condition column, wrong SELECT column, wrong value, wrong aggregation, and an extra condition.
+Five correct and five wrong dev examples, each with a failure label, are in [`results/samples.md`](results/samples.md). The wrong ones cover five different failure types: wrong condition column, wrong SELECT column, wrong value, wrong aggregation, and an extra condition. Some "errors" come from noisy gold labels; for example, one gold query uses `MIN` for a question that asks for a single episode number.
 
 ---
 
@@ -339,9 +369,22 @@ Snapping also repairs small spelling slips by the model. It is a post-processing
 
 ## Front end
 
-TBD: screenshot, how to run locally, and the live link.
+A Streamlit app where you type a question and a comma-separated list of column names, and get the SQL with the real column names. It calls the trained model directly.
 
-The app calls `decode.predict(model, sp, question, header, method)`, which builds the input with the starter's `encode_source`, decodes, parses, snaps values, and returns readable SQL with the real column names.
+```bash
+python -m streamlit run app/app.py
+```
+
+Then open http://localhost:8501.
+
+- **Example buttons** fill in dev questions and an unseen "countries" table.
+- **Decoding choice**: beam search (best quality) or greedy (faster).
+- **Input checks**: empty question, no columns, or more than 64 columns.
+- **"How the model read your table"** shows the `<cK>` → column mapping and the parsed WikiSQL query.
+
+The app loads `checkpoints/final.pt` if it exists, otherwise `checkpoints/best.pt`, and caches the model so it loads only once.
+
+**Live demo:** TBD
 
 ---
 
